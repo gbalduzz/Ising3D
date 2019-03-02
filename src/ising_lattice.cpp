@@ -54,15 +54,14 @@ void IsingLattice::doStep() {
 
   const int halo = haloMagnetization(candidate);
   const int delta_s = spins_[candidate] ? -2 : 2;
-
-  // prob = Exp[ -beta delta_spin].
+  const int delta_E = -delta_s * halo;
   // TODO: store in table;
-  const Real prob = std::exp(-beta_ * (delta_s * halo));
+  const Real prob = std::exp(-beta_ * delta_E);
   const bool accept = distro_real(rng_) < prob;
 
   if (accept) {
     spins_[candidate] = !spins_[candidate]; // flip spin.
     M_ += delta_s;
-    E_ += delta_s * halo;
+    E_ += delta_E;
   }
 }

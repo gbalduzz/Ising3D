@@ -3,19 +3,28 @@
 #include <string>
 
 #include "ising_lattice.hpp"
+#include "json11.hpp"
 
-int main() {
-  const std::vector<Real> betas{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
-  const int thermalization_sweep = 500;
-  const int measurements = 10000;
-  const int L = 20;
+int main(int argc, char **argv) {
+  const std::string inputname = argc > 1 ? argv[1] : "input.json";
+  std::cout << "Reading " << inputname << "\n";
+  json11::Json reader = json11::Json::parseFile(inputname);
+
+  const Real start_beta = reader["initial-beta"].number_value();
+  const Real end_beta = reader["final-beta"].number_value();
+  const int n_beta = reader["n-betas"].int_value();
+  const int thermalization_sweep = reader["thermalization-sweep"].int_value();
+  const int measurements = reader["measurements"].int_value();
+  const int L = reader["L"].int_value();
+
   const std::string outname = "output.txt";
+  const Real delta_beta = (end_beta - start_beta) / n_beta;
 
-  IsingLattice lattice(L, betas[0]);
+  IsingLattice lattice(L, start_beta);
   std::ofstream out(outname);
   out << "# beta\tE\tM\tE2\tM2\n";
 
-  for (auto beta : betas) {
+  for (Real beta = start_beta; beta < end_beta; beta += delta_beta) {
     std::cout << "Inverse temperature: " << beta << std::endl;
     lattice.setBeta(beta);
 
@@ -37,7 +46,8 @@ int main() {
     E2 /= lattice.size() * lattice.size() * measurements;
     M /= lattice.size() * measurements;
     M2 /= lattice.size() * lattice.size() * measurements;
-    out << beta << "\t" << E << "\t" << M << "\t" << E2 << "\t" << M2 << std::endl;
+    out << beta << "\t" << E << "\t" << M << "\t" << E2 << "\t" << M2
+        << std::endl;
   }
 
   return 0;
