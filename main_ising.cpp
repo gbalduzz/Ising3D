@@ -18,19 +18,24 @@ int main(int argc, char **argv) {
   const int L = reader["L"].int_value();
 
   const std::string outname = "output.txt";
-  const Real delta_beta = (end_beta - start_beta) / n_beta;
+  const Real delta_beta = (end_beta - start_beta) / (n_beta - 1);
 
   IsingLattice lattice(L, start_beta);
   std::ofstream out(outname);
+  std::ofstream energies("energies.txt");
   out << "# beta\tE\tM\tE2\tM2\n";
 
-  for (Real beta = start_beta; beta < end_beta; beta += delta_beta) {
+  Real beta = start_beta;
+  for (int id = 0; id < n_beta; ++id, beta += delta_beta) {
     std::cout << "Inverse temperature: " << beta << std::endl;
     lattice.setBeta(beta);
 
     // Thermalize.
-    for (int i = 0; i < thermalization_sweep; ++i)
+    for (int i = 0; i < thermalization_sweep; ++i) {
       lattice.doSweep();
+      if (id == 0)
+        energies << lattice.getE() << "\n";
+    }
 
     // Measure.
     Real E(0), E2(0), M(0), M2(0);
@@ -40,12 +45,15 @@ int main(int argc, char **argv) {
       E2 += lattice.getE() * lattice.getE();
       M += lattice.getM();
       M2 += lattice.getM() * lattice.getM();
+
+      if (id == 0)
+        energies << lattice.getE() << "\n";
     }
 
-    E /= lattice.size() * measurements; // Store energy density.
-    E2 /= lattice.size() * lattice.size() * measurements;
-    M /= lattice.size() * measurements;
-    M2 /= lattice.size() * lattice.size() * measurements;
+    E /= measurements; // Store energy density.
+    E2 /= measurements;
+    M /= measurements;
+    M2 /= measurements;
     out << beta << "\t" << E << "\t" << M << "\t" << E2 << "\t" << M2
         << std::endl;
   }

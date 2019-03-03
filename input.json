@@ -2,7 +2,7 @@
   "L" : 10,
   "initial-beta" : 0.1,
   "final-beta" : 1,
-  "n-betas" : 10,
+  "n-betas" : 20,
   "thermalization-sweep" : 500,
   "measurements" : 10000
 }

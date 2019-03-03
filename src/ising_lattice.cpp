@@ -1,18 +1,28 @@
 #include "ising_lattice.hpp"
 
+#include <cassert>
+
 IsingLattice::IsingLattice(int L, Real beta)
     : L_(L), n_(L * L * L), beta_(beta), spins_(n_), rng_(0), E_(0), M_(0) {
   std::uniform_int_distribution<unsigned short> distro(0, 1);
 
-  for (int i = 0; i < n_; ++i)
+  for (int i = 0; i < n_; ++i) {
     spins_[i] = distro(rng_);
+    M_ += 2 * spins_[i] - 1;
+  }
 
-  // Initialize energy and magnetization.
+  E_ = computeE();
+}
+
+long int IsingLattice::computeE() const {
+  long int E = 0;
   for (int i = 0; i < n_; ++i) {
     const int spin = spins_[i] ? 1 : -1;
-    M_ += spin;
-    E_ += -spin * haloMagnetization(i);
+    E += -spin * haloMagnetization(i);
   }
+
+  assert(E >= -6 * n_ && E <= 6 * n_);
+  return E;
 }
 
 void IsingLattice::doSweep() {
@@ -23,7 +33,7 @@ void IsingLattice::doSweep() {
 int IsingLattice::haloMagnetization(int idx) const {
   // Take care of periodic boundary conditions
   auto pbs = [&](const int i) {
-    if (i > 0 && i < L_)
+    if (i >= 0 && i < L_)
       return i;
     else if (i >= L_)
       return i - L_;
@@ -44,6 +54,7 @@ int IsingLattice::haloMagnetization(int idx) const {
                    spins_[index(i, j + 1, k)] + spins_[index(i, j - 1, k)] +
                    spins_[index(i, j, k + 1)] + spins_[index(i, j, k - 1)];
 
+  assert(n_up <= 6 && n_up >= 0);
   return 2 * n_up - 6;
 }
 
@@ -54,7 +65,7 @@ void IsingLattice::doStep() {
 
   const int halo = haloMagnetization(candidate);
   const int delta_s = spins_[candidate] ? -2 : 2;
-  const int delta_E = -delta_s * halo;
+  const int delta_E = -2 * delta_s * halo;
   // TODO: store in table;
   const Real prob = std::exp(-beta_ * delta_E);
   const bool accept = distro_real(rng_) < prob;
@@ -63,5 +74,6 @@ void IsingLattice::doStep() {
     spins_[candidate] = !spins_[candidate]; // flip spin.
     M_ += delta_s;
     E_ += delta_E;
+    assert(E_ == computeE());
   }
 }
