@@ -1,8 +1,8 @@
 {
-  "L" : 10,
+  "L" : 50,
   "initial-beta" : 0.1,
-  "final-beta" : 1,
-  "n-betas" : 20,
+  "final-beta" : 0.7,
+  "n-betas" : 30,
   "thermalization-sweep" : 500,
-  "measurements" : 10000
+  "measurements" : 25000
 }

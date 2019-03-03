@@ -3,7 +3,7 @@
 #include <cassert>
 
 IsingLattice::IsingLattice(int L, Real beta)
-    : L_(L), n_(L * L * L), beta_(beta), spins_(n_), rng_(0), E_(0), M_(0) {
+    : L_(L), n_(L * L * L), spins_(n_), rng_(0), E_(0), M_(0) {
   std::uniform_int_distribution<unsigned short> distro(0, 1);
 
   for (int i = 0; i < n_; ++i) {
@@ -11,6 +11,7 @@ IsingLattice::IsingLattice(int L, Real beta)
     M_ += 2 * spins_[i] - 1;
   }
 
+  setBeta(beta);
   E_ = computeE();
 }
 
@@ -58,22 +59,39 @@ int IsingLattice::haloMagnetization(int idx) const {
   return 2 * n_up - 6;
 }
 
+void IsingLattice::setBeta(Real beta) {
+  beta_ = beta;
+
+  // Set table.
+  for (int halo = 0; halo < exp_table_.size(); ++halo) {
+    exp_table_[halo] = std::exp(-4 * beta_ * halo);
+  }
+}
+
+Real IsingLattice::computeProb(const int halo) const {
+  if (halo >= 0)
+    return 1;
+  assert(halo >= -6);
+  return exp_table_[-halo];
+}
+
 void IsingLattice::doStep() {
   std::uniform_int_distribution<int> distro_int(0, n_ - 1);
   std::uniform_real_distribution<Real> distro_real(0, 1);
   const int candidate = distro_int(rng_);
 
   const int halo = haloMagnetization(candidate);
-  const int delta_s = spins_[candidate] ? -2 : 2;
-  const int delta_E = -2 * delta_s * halo;
-  // TODO: store in table;
-  const Real prob = std::exp(-beta_ * delta_E);
+  const int delta_s_sign = spins_[candidate] ? -1 : 1;
+
+  const Real prob = computeProb(delta_s_sign * halo);
   const bool accept = distro_real(rng_) < prob;
 
   if (accept) {
     spins_[candidate] = !spins_[candidate]; // flip spin.
-    M_ += delta_s;
+    const int delta_E = -4 * delta_s_sign * halo;
+    M_ += 2 * delta_s_sign;
     E_ += delta_E;
     assert(E_ == computeE());
+    assert(prob == std::min(std::exp(-beta_ * delta_E), Real(1)));
   }
 }
