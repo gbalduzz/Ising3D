@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-IsingLattice::IsingLattice(int L, Real beta)
+IsingLattice::IsingLattice(int L)
     : L_(L), n_(L * L * L), spins_(n_), rng_(0), E_(0), M_(0) {
   std::uniform_int_distribution<unsigned short> distro(0, 1);
 
@@ -11,7 +11,6 @@ IsingLattice::IsingLattice(int L, Real beta)
     M_ += 2 * spins_[i] - 1;
   }
 
-  setBeta(beta);
   E_ = computeE();
 }
 

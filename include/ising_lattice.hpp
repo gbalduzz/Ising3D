@@ -8,7 +8,7 @@
 
 class IsingLattice {
 public:
-  IsingLattice(int L, Real beta);
+  IsingLattice(int L);
 
   void doSweep();
 
