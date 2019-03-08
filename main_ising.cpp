@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -14,50 +15,47 @@ int main(int argc, char **argv) {
   const int measurements = reader["measurements"].int_value();
   const int L = reader["L"].int_value();
 
-  std::vector<Real> betas;
-  for(const auto& beta : reader["betas"].array_items()){
-    betas.push_back(beta.number_value());
+  std::vector<int> Ls;
+  for (const auto &l : reader["Ls"].array_items()) {
+    Ls.push_back(l.int_value());
   }
 
-  const std::string outname = "output.txt";
+  std::vector<Real> betas;
+  for (const auto &T : reader["Ts"].array_items()) {
+    betas.push_back(1. / T.number_value());
+  }
+  std::sort(betas.begin(), betas.end());
 
-  IsingLattice lattice(L);
-  std::ofstream out(outname);
-  std::ofstream energies("energies.txt");
-  out << "# beta\tE\tM\tE2\tM2\n";
+  for (int L : Ls) {
+    IsingLattice lattice(L);
+    std::cout << "Size: " << L << std::endl;
 
-  int id = 0;
-  for (Real beta : betas) {
-    std::cout << "Inverse temperature: " << beta << std::endl;
-    lattice.setBeta(beta);
+    std::ofstream e_file("energies_L" + std::to_string(L) + ".txt");
+    e_file << "# beta\tE\n";
+    std::ofstream m_file("magnetization_L" + std::to_string(L) + ".txt");
+    m_file << "# beta\tM\n";
 
-    // Thermalize.
-    for (int i = 0; i < thermalization_sweep; ++i) {
-      lattice.doSweep();
-      if (id == 0)
-        energies << lattice.getE() << "\n";
+    for (Real beta : betas) {
+      std::cout << "Inverse temperature: " << beta << std::endl;
+      lattice.setBeta(beta);
+
+      e_file << beta << "\t";
+      m_file << beta << "\t";
+
+      // Thermalize.
+      for (int i = 0; i < thermalization_sweep; ++i) {
+        lattice.doSweep();
+      }
+
+      // Measure.
+      for (int i = 0; i < measurements; ++i) {
+        lattice.doSweep();
+        e_file << lattice.getE() << "\t";
+        m_file << lattice.getM() << "\t";
+      }
+      e_file << "\n";
+      m_file << "\n";
     }
-
-    // Measure.
-    Real E(0), E2(0), M(0), M2(0);
-    for (int i = 0; i < measurements; ++i) {
-      lattice.doSweep();
-      E += lattice.getE();
-      E2 += lattice.getE() * lattice.getE();
-      M += lattice.getM();
-      M2 += lattice.getM() * lattice.getM();
-
-      if (id == 0)
-        energies << lattice.getE() << "\n";
-    }
-
-    E /= measurements; // Store energy density.
-    E2 /= measurements;
-    M /= measurements;
-    M2 /= measurements;
-    out << beta << "\t" << E << "\t" << M << "\t" << E2 << "\t" << M2
-        << std::endl;
-    ++id;
   }
 
   return 0;
