@@ -30,9 +30,9 @@ int main(int argc, char **argv) {
     IsingLattice lattice(L);
     std::cout << "Size: " << L << std::endl;
 
-    std::ofstream e_file("energies_L" + std::to_string(L) + ".txt");
+    std::ofstream e_file("outputs/energies_L" + std::to_string(L) + ".txt");
     e_file << "# beta\tE\n";
-    std::ofstream m_file("magnetization_L" + std::to_string(L) + ".txt");
+    std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) + ".txt");
     m_file << "# beta\tM\n";
 
     for (Real beta : betas) {

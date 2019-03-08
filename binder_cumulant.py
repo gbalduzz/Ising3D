@@ -34,7 +34,7 @@ def sort(array, col):
     return array[array[:,col].argsort()]
 
 for L in Ls:
-    data = np.loadtxt("magnetization_L"+str(L)+".txt")
+    data = np.loadtxt("outputs/magnetization_L"+str(L)+".txt")
     betas = data[:, 0]
     out = []
 
@@ -50,4 +50,6 @@ for L in Ls:
 
 plt.legend(loc="best")
 plt.xlabel(r"$T$")
+plt.ylabel(r"$U$")
+plt.title("Binder cumulant.")
 plt.show()
