@@ -32,9 +32,11 @@ int main(int argc, char **argv) {
 
     std::ofstream e_file("outputs/energies_L" + std::to_string(L) + ".txt");
     e_file << "# beta\tE\n";
+    
     std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) + ".txt");
-    m_file << "# beta\tM\n";
-
+    m_file << "# beta\tM\n";// << std::setprecision(10);
+    m_file.precision(10);
+    
     for (Real beta : betas) {
       std::cout << "Inverse temperature: " << beta << std::endl;
       lattice.setBeta(beta);
