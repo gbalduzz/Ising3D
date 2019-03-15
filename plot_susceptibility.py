@@ -5,8 +5,6 @@ import numpy as np
 import json
 
 file = json.load(open("input.json"))
-
-betas = 1./np.array(file["Ts"])
 Ls = file["Ls"]
 
 def jackKnife(procedure, x, n):
@@ -35,7 +33,9 @@ for L in Ls:
 
     for id, beta in enumerate(betas):
 
-        M = data[id, 1:]
+	# Note: the c code outputs a magnetization density, here we need the total, hence we
+	#       multiply by the volume.
+        M = data[id, 1:] * L**3
 
         def susceptibility(m) :
             m2 = (m**2).mean()

@@ -33,6 +33,7 @@ void IsingLattice::doSweep() {
 
 int IsingLattice::haloMagnetization(int idx) const {
   // Take care of periodic boundary conditions
+  // Note: don't exclude that implementing this in terms of '%' operator is faster on certain architectures.
   auto pbs = [&](const int i) {
     if (i >= 0 && i < L_)
       return i;
@@ -91,6 +92,8 @@ void IsingLattice::doStep() {
     const int delta_E = 2 * s_old * halo;
     M_ += -2 * s_old;
     E_ += delta_E;
+
+    // Note: these are built in tests, they are disabled if you build in Release mode, which defines the flag NDEBUG.
     assert(E_ == computeE());
     assert(prob == std::min(std::exp(-beta_ * delta_E), Real(1)));
   }

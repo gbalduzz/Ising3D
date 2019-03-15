@@ -13,7 +13,7 @@ public:
   void doSweep();
 
   Real getE() const { return Real(E_) / n_; } // Return energy density.
-  Real getM() const { return Real(M_) / n_; }
+  Real getM() const { return Real(M_) / n_; } // Return magnetization density.
   auto size() const { return n_; }
 
   void setBeta(Real beta);
