@@ -13,14 +13,17 @@ IsingLattice::IsingLattice(int L)
 
 void IsingLattice::computeEandM() {
   E_ = M_ = 0;
-
-  for (int i = 0; i < n_; ++i) {
-    M_ += spins_[i];
-    E_ += -spins_[i] * haloMagnetization<true>(i);
-  }
+  unsigned int linindex = 0;
+  for (int k = 0; k < L_; ++k)
+    for (int j = 0; j < L_; ++j)
+      for (int i = 0; i < L_; ++i) {
+        M_ += spins_[linindex];
+        E_ -= spins_[linindex] * rightMagnetization(i, j, k);
+        ++linindex;
+      }
 }
 
-template <bool right_only> int IsingLattice::haloMagnetization(int idx) const {
+int IsingLattice::haloMagnetization(int idx) const {
   // Take care of periodic boundary conditions
   // Note: don't exclude that implementing this in terms of '%' operator is
   // faster on certain architectures.
@@ -42,17 +45,25 @@ template <bool right_only> int IsingLattice::haloMagnetization(int idx) const {
   const int j = idx / L_;
   const int i = idx - L_ * j;
 
-  if
-    constexpr(right_only) {
-      return spins_[index(i + 1, j, k)] + spins_[index(i, j + 1, k)] +
-             spins_[index(i, j, k + 1)];
-    }
-  else {
-    return spins_[index(i + 1, j, k)] + spins_[index(i - 1, j, k)] +
-           spins_[index(i, j + 1, k)] + spins_[index(i, j - 1, k)] +
-           spins_[index(i, j, k + 1)] + spins_[index(i, j, k - 1)];
-  }
+  return spins_[index(i + 1, j, k)] + spins_[index(i - 1, j, k)] +
+         spins_[index(i, j + 1, k)] + spins_[index(i, j - 1, k)] +
+         spins_[index(i, j, k + 1)] + spins_[index(i, j, k - 1)];
 }
 
-template int IsingLattice::haloMagnetization<true>(int idx) const;
-template int IsingLattice::haloMagnetization<false>(int idx) const;
+int IsingLattice::rightMagnetization(int i, int j, int k) const {
+  // TODO: Remove copy.
+  auto pbs = [&](const int i) {
+    if (i >= 0 && i < L_)
+      return i;
+    else if (i >= L_)
+      return i - L_;
+    else
+      return i + L_;
+  };
+  auto index = [&](int i, int j, int k) {
+    return pbs(i) + L_ * pbs(j) + L_ * L_ * pbs(k);
+  };
+
+  return spins_[index(i + 1, j, k)] + spins_[index(i, j + 1, k)] +
+         spins_[index(i, j, k + 1)];
+}

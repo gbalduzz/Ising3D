@@ -20,7 +20,9 @@ public:
   auto size() const { return n_; }
 
 protected:
-  template <bool right_only = false> int haloMagnetization(int idx) const;
+  int haloMagnetization(int idx) const;
+  // Compute the halo magnetization only for sites with higher linear index.
+  int rightMagnetization(int i, int j, int k) const;
   void computeEandM();
 
   const int L_;
