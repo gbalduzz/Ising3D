@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# Usage: pythhon binder_cumulant.py <data folder. default = outputs>
 
 from matplotlib import pyplot as plt
 from sys import argv
@@ -6,12 +7,9 @@ import numpy as np
 import glob
 import re
 
-if len(argv) < 2:
-	print("Usage: pythhon binder_cumulant.py <data folder>")
-	exit(-1)
-
-folder = argv[1]
-
+folder = ""
+if len(argv) < 2 : folder = "outputs"
+else : folder = argv[1]
 
 def jackKnife(procedure, x, n):
     block_size = int(np.ceil(len(x) / n))
