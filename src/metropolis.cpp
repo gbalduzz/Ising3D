@@ -44,7 +44,6 @@ void Metropolis::doStep() {
     E_ += delta_E;
 
     // Note: these are built in tests, they are disabled if you build in Release mode, which defines the flag NDEBUG.
-    assert(E_ == computeE());
     assert(prob == std::min(std::exp(-beta_ * delta_E), Real(1)));
   }
 }

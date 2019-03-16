@@ -21,7 +21,7 @@ public:
 
 protected:
   template <bool right_only = false> int haloMagnetization(int idx) const;
-  long int computeE() const;
+  void computeEandM();
 
   const int L_;
   const int n_;

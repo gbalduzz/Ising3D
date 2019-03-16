@@ -3,8 +3,9 @@
 #include <iostream>
 #include <string>
 
-#include "metropolis.hpp"
 #include "json11.hpp"
+#include "metropolis.hpp"
+#include "wolff.hpp"
 
 int main(int argc, char **argv) {
   const std::string inputname = argc > 1 ? argv[1] : "input.json";
@@ -27,14 +28,16 @@ int main(int argc, char **argv) {
   std::sort(betas.begin(), betas.end());
 
   for (int L : Ls) {
-    Metropolis lattice(L);
+    Wolff lattice(L);
     std::cout << "Size: " << L << std::endl;
 
     std::ofstream e_file("outputs/energies_L" + std::to_string(L) + ".txt");
     e_file << "# beta\tE\n";
+    e_file.precision(10);
 
-    std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) + ".txt");
-    m_file << "# beta\tM\n";// << std::setprecision(10);
+    std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) +
+                         ".txt");
+    m_file << "# beta\tM\n";
     m_file.precision(10);
 
     for (Real beta : betas) {
@@ -48,6 +51,8 @@ int main(int argc, char **argv) {
       for (int i = 0; i < thermalization_sweep; ++i) {
         lattice.doSweep();
       }
+
+      lattice.markThermalized();
 
       // Measure.
       for (int i = 0; i < measurements; ++i) {

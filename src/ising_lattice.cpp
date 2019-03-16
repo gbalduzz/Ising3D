@@ -5,21 +5,19 @@
 IsingLattice::IsingLattice(int L)
     : L_(L), n_(L * L * L), spins_(n_), rng_(0), E_(0), M_(0) {
   std::uniform_int_distribution<std::int8_t> distro(0, 1);
-
   for (int i = 0; i < n_; ++i) {
     spins_[i] = 2 * distro(rng_) - 1;
-    M_ += spins_[i];
   }
-
-  E_ = computeE();
+  computeEandM();
 }
 
-long int IsingLattice::computeE() const {
-  long int E = 0;
+void IsingLattice::computeEandM() {
+  E_ = M_ = 0;
+
   for (int i = 0; i < n_; ++i) {
-    E += -spins_[i] * haloMagnetization<true>(i);
+    M_ += spins_[i];
+    E_ += -spins_[i] * haloMagnetization<true>(i);
   }
-  return E;
 }
 
 template <bool right_only> int IsingLattice::haloMagnetization(int idx) const {
