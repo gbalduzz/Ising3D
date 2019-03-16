@@ -44,17 +44,22 @@ void Wolff::markThermalized() {
             << Real(cumulative_cluster_size_) / n_steps_ << "\n";
 }
 
-void Wolff::addToCluster(unsigned int id) {
-  cluster_queue_.push(id);
-  cluster_members_.push_back(id);
-  spins_[id] = 0; // Mark as part of the cluster.
+std::array<unsigned int, 3> Wolff::unrollIndex(unsigned int idx) {
+  std::array<unsigned int, 3> unrolled;
+  // Compute linear indices.
+  unrolled[2] = idx / (L_ * L_);
+  idx -= unrolled[2] * (L_ * L_);
+  unrolled[1] = idx / L_;
+  unrolled[0] = idx - L_ * unrolled[1];
+
+  return unrolled;
 }
 
-std::array<unsigned int, 6> Wolff::neighbours(unsigned int idx) {
+auto Wolff::neighbours(const std::array<unsigned int, 3> &site) {
   // Take care of periodic boundary conditions
   // Note: don't exclude that implementing this in terms of '%' operator is
   // faster on certain architectures.
-  auto pbs = [&](const int i) {
+  auto pbs = [&](const int i) -> unsigned int {
     if (i >= 0 && i < L_)
       return i;
     else if (i >= L_)
@@ -62,48 +67,51 @@ std::array<unsigned int, 6> Wolff::neighbours(unsigned int idx) {
     else
       return i + L_;
   };
-  auto index = [&](int i, int j, int k) -> unsigned int {
-    return pbs(i) + L_ * pbs(j) + L_ * L_ * pbs(k);
+  auto index = [&](int i, int j, int k) -> std::array<unsigned int, 3> {
+    return std::array<unsigned int, 3>{pbs(i), pbs(j), pbs(k)};
   };
 
-  // Compute linear indices.
-  const  int k = idx / (L_ * L_);
-  idx -= k * (L_ * L_);
-  const int j = idx / L_;
-  const int i = idx - L_ * j;
+  const int i = site[0];
+  const int j = site[1];
+  const int k = site[2];
 
-  const std::array<unsigned int, 6> nn{index(i + 1, j, k), index(i - 1, j, k),
-                                     index(i, j + 1, k), index(i, j - 1, k),
-                                     index(i, j, k + 1), index(i, j, k - 1)};
-  for(auto el : nn)
-      assert(el < n_);
-  return nn;
+  return std::array<std::array<unsigned int, 3>, 6>{
+      index(i + 1, j, k), index(i - 1, j, k), index(i, j + 1, k),
+      index(i, j - 1, k), index(i, j, k + 1), index(i, j, k - 1)};
 }
 
 std::size_t Wolff::doStep() {
   std::uniform_int_distribution<unsigned int> distro_int(0, n_ - 1);
   std::uniform_real_distribution<Real> distro_real(0, 1);
-  const unsigned int candidate = distro_int(rng_);
-  const auto s_old = spins_[candidate];
 
-  cluster_members_.clear();
+  const auto root_idx = distro_int(rng_);
+  const std::int8_t s_old = spins_[root_idx];
+  const std::int8_t new_spin = -s_old;
+
+  std::size_t cluster_size = 0;
   assert(cluster_queue_.empty());
 
-  addToCluster(candidate);
+  auto add_to_cluster = [&](const std::array<unsigned int, 3> &site,
+                            unsigned int linindex) {
+    assert(linindex == site[0] + site[1] * L_ + site[2] * L_ * L_);
+    cluster_queue_.push(site);
+    spins_[linindex] = new_spin;
+    ++cluster_size;
+  };
 
+  add_to_cluster(unrollIndex(root_idx), root_idx);
+
+  // Perform a breath first search of the lattice and flip cluster members on the flight.
   while (!cluster_queue_.empty()) {
-    const unsigned int site = cluster_queue_.front();
+    const auto site = cluster_queue_.front();
     cluster_queue_.pop();
 
     for (auto next : neighbours(site)) {
-      if (spins_[next] == s_old && distro_real(rng_) < prob_)
-        addToCluster(next);
+      const unsigned int linindex = next[0] + next[1] * L_ + next[2] * L_ * L_;
+      if (spins_[linindex] == s_old && distro_real(rng_) < prob_)
+        add_to_cluster(next, linindex);
     }
   }
 
-  for (unsigned int idx : cluster_members_) {
-    spins_[idx] = -s_old; // flip cluster spins.
-  }
-
-  return cluster_members_.size();
+  return cluster_size;
 }
