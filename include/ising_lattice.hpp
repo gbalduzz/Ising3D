@@ -1,3 +1,4 @@
+// Base lattice class.
 #pragma once
 
 #include <array>
@@ -10,19 +11,16 @@ class IsingLattice {
 public:
   IsingLattice(int L);
 
-  void doSweep();
+  virtual void doSweep() = 0;
+  virtual void setBeta(Real beta) = 0;
 
   Real getE() const { return Real(E_) / n_; } // Return energy density.
   Real getM() const { return Real(M_) / n_; } // Return magnetization density.
   auto size() const { return n_; }
 
-  void setBeta(Real beta);
-
-private:
-  void doStep();
-  int haloMagnetization(int idx) const;
+protected:
+  template <bool right_only = false> int haloMagnetization(int idx) const;
   long int computeE() const;
-  Real computeProb(int halo) const;
 
   const int L_;
   const int n_;
@@ -33,6 +31,4 @@ private:
 
   long int E_; // in units of J.
   long int M_; // not normalized.
-
-  std::array<Real, 7> exp_table_;
 };

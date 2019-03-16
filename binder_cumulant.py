@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 
 from matplotlib import pyplot as plt
+from sys import argv
 import numpy as np
-import json
+import glob
+import re
 
-file = json.load(open("input.json"))
+if len(argv) < 2:
+	print("Usage: pythhon binder_cumulant.py <data folder>")
+	exit(-1)
 
-betas = 1./np.array(file["Ts"])
-Ls = file["Ls"]
+folder = argv[1]
+
 
 def jackKnife(procedure, x, n):
     block_size = int(np.ceil(len(x) / n))
@@ -33,8 +37,16 @@ def binderCumulant(x) :
 def sort(array, col):
     return array[array[:,col].argsort()]
 
+
+# Find the length of the simulated clusters.
+files = glob.glob(folder + "/magnetization_L*" + ".txt")
+Ls = []
+for file in files:
+	L = re.search("[0-9]+", file).group(0)
+	Ls.append(L)
+
 for L in Ls:
-    data = np.loadtxt("outputs/magnetization_L"+str(L)+".txt")
+    data = np.loadtxt(folder + "/magnetization_L"+str(L)+".txt")
     betas = data[:, 0]
     out = []
 
@@ -46,10 +58,13 @@ for L in Ls:
         out.append([1./beta, b, db])
 
     out = sort(np.array(out), 0)
+    np.savetxt(folder + "/binder_cumulants_L" + str(L) + ".txt", out, header='T\tU\tdelta U')
     plt.errorbar(out[:,0], out[:,1], fmt = "--o", yerr = out[:,2], label = "L="+str(L))
 
 plt.legend(loc="best")
 plt.xlabel(r"$T$")
 plt.ylabel(r"$U$")
 plt.title("Binder cumulant.")
+
+plt.savefig("binder_cumulant.pdf", format = 'pdf')
 plt.show()

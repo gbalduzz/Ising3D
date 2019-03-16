@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include "ising_lattice.hpp"
+#include "metropolis.hpp"
 #include "json11.hpp"
 
 int main(int argc, char **argv) {
@@ -27,16 +27,16 @@ int main(int argc, char **argv) {
   std::sort(betas.begin(), betas.end());
 
   for (int L : Ls) {
-    IsingLattice lattice(L);
+    Metropolis lattice(L);
     std::cout << "Size: " << L << std::endl;
 
     std::ofstream e_file("outputs/energies_L" + std::to_string(L) + ".txt");
     e_file << "# beta\tE\n";
-    
+
     std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) + ".txt");
     m_file << "# beta\tM\n";// << std::setprecision(10);
     m_file.precision(10);
-    
+
     for (Real beta : betas) {
       std::cout << "Inverse temperature: " << beta << std::endl;
       lattice.setBeta(beta);
