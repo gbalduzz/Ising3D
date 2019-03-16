@@ -13,6 +13,7 @@ public:
 
   virtual void doSweep() = 0;
   virtual void setBeta(Real beta) = 0;
+  virtual void markThermalized(){}
 
   Real getE() const { return Real(E_) / n_; } // Return energy density.
   Real getM() const { return Real(M_) / n_; } // Return magnetization density.
@@ -25,7 +26,7 @@ protected:
   const int L_;
   const int n_;
   Real beta_;
-  std::vector<bool> spins_;
+  std::vector<std::int8_t> spins_;
 
   std::mt19937_64 rng_;
 

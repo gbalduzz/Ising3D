@@ -32,13 +32,13 @@ void Metropolis::doStep() {
   const int candidate = distro_int(rng_);
 
   const int halo = haloMagnetization(candidate);
-  const int s_old = spins_[candidate] ? 1 : -1;
+  const int s_old = spins_[candidate];
 
   const Real prob = computeProb(s_old * halo);
   const bool accept = distro_real(rng_) < prob;
 
   if (accept) {
-    spins_[candidate] = !spins_[candidate]; // flip spin.
+    spins_[candidate] *= -1; // flip spin.
     const int delta_E = 2 * s_old * halo;
     M_ += -2 * s_old;
     E_ += delta_E;
