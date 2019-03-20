@@ -38,13 +38,13 @@ std::vector<Real> autocorrelation(const std::vector<Real> &v, int max_tau) {
 }
 
 Real integratedAutocorrelation(const std::vector<Real> &autocorr_func) {
-  Real tau = autocorr_func[0];
+  Real rho_sum = autocorr_func[0];
 
   for (int i = 1; i < autocorr_func.size(); ++i) {
-    if (autocorr_func[i] < 0 || autocorr_func[i] > autocorr_func[i - 1])
+    if (autocorr_func[i] < 0)
       break;
-    tau += autocorr_func[i];
+    rho_sum += autocorr_func[i];
   }
 
-  return tau;
+  return 1 + 2 * rho_sum;
 }
