@@ -31,11 +31,11 @@ int main(int argc, char **argv) {
     Wolff lattice(L);
     std::cout << "Size: " << L << std::endl;
 
-    std::ofstream e_file("outputs/energies_L" + std::to_string(L) + ".txt");
+    std::ofstream e_file("outputs/E2_L" + std::to_string(L) + ".txt");
     e_file << "# beta\tE\n";
     e_file.precision(10);
 
-    std::ofstream m_file("outputs/magnetization_L" + std::to_string(L) +
+    std::ofstream m_file("outputs/M2_L" + std::to_string(L) +
                          ".txt");
     m_file << "# beta\tM\n";
     m_file.precision(10);
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
       for (int i = 0; i < measurements; ++i) {
         lattice.doSweep();
         e_file << lattice.getE() << "\t";
-        m_file << lattice.getM() << "\t";
+        m_file << lattice.getM2() << "\t";
       }
       e_file << "\n";
       m_file << "\n";

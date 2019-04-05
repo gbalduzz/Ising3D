@@ -5,6 +5,12 @@
 
 Wolff::Wolff(int L) : IsingLattice(L) {}
 
+Real Wolff::getM2() {
+  Real m2 = Real(cumulative_cluster_size_) / n_steps_;
+  n_steps_ = cumulative_cluster_size_ = 0;
+  return m2;
+}
+
 void Wolff::doSweep() {
   int current_steps;
 

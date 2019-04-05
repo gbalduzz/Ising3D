@@ -16,6 +16,8 @@ public:
 
   void markThermalized() override;
 
+  Real getM2();
+  
 private:
   // Returns the size of the modified cluster.
   std::size_t doStep();
