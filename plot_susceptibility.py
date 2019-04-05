@@ -33,9 +33,9 @@ for L in Ls:
 
     for id, beta in enumerate(betas):
 
-	# Note: the c code outputs a magnetization density, here we need the total, hence we
+	# Note: the c code outputs a signed magnetization density, here we need the total, hence we
 	#       multiply by the volume.
-        M = data[id, 1:] * L**3
+        M = np.abs(data[id, 1:]) * L**3
 
         def susceptibility(m) :
             m2 = (m**2).mean()
